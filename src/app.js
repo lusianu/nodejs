@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-require('./controller/controller')(app);
+//require('./controller/controller')(app);
 
 consign().include('./controller')
          .then('./modules')

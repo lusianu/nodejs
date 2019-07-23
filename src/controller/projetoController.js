@@ -1,6 +1,6 @@
 const express = require('express');
 
-const authMiddleware = require('./middlerwares/autenticacao');
+const authMiddleware = require('../middlerwares/autenticacao');
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.get('/', async(req, res) => {
             res.status(400).send({erro:error});
         }
         res.send({usuario:results});
+
         }); 
     } catch (err) {
         console.error('erro', err);

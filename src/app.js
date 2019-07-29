@@ -11,7 +11,6 @@ require('./controller/controller')(app);
 
 consign().include('./controller')
          .then('./modules')
-         .then('./database/mysql')
          .into(app);
 
 app.listen(3000);

@@ -1,17 +1,17 @@
 const express = require('express');
+const mysql = require('../database/mysql')
 
 const authMiddleware = require('../middlerwares/autenticacao');
 
 const router = express.Router();
 
-router.use(authMiddleware); 
+//router.use(authMiddleware); 
 
 router.get('/', async(req, res) => {
     
     try {
-        await mysql.connect();
-        
-        mysql.query('SELECT * FROM usuario', function (error, results) {
+      
+        await mysql.query('SELECT * FROM usuario', function (error, results) {
         if (error){
             res.status(400).send({erro:error});
         }
@@ -24,4 +24,4 @@ router.get('/', async(req, res) => {
     
 });
 
-module.exports = app => app.use('/projeto', router);
+module.exports = app => app.use('/teste', router);

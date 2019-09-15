@@ -9,9 +9,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 //require('./controller/controller')(app);
 
-consign().include('./controller')
-         .then('./modules')
-         .then('./database/mysql')
+consign().include('./src/controller')
+         .then('./src/modules')
+         .then('./src/database/mysql.js')
          .into(app);
 
 app.listen(3000);

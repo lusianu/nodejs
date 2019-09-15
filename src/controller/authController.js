@@ -1,10 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const usuario = require('../models/Usuario');
+const usuario = require('../models/usuarioModel');
 const jwt = require('jsonwebtoken');
 const autConfig = require('../config/autenticacao.json');
 const crypto = require('crypto');
 const mailer = require('../modules/meiler');
+const connection = require('../database/mysql')
 
 const router = express.Router();
 
@@ -17,10 +18,15 @@ function gerarToken(params = {}){
 router.post('/registro', async(req, res) =>{
     const {email} = req.body;
     try{
-        if (await usuario.findOne({email})){
-            return res.status(400).send({erro: 'usuario ja existe'})
-        }
-        const usuarioRetorno = await usuario.create(req.body);
+            //res.send({id:12});
+        // if (await usuario.create({email})){
+        //     return res.status(400).send({erro: 'usuario ja existe'})
+        // }
+        const usuarioRetorno = await usuario.getUsuario(connection,req.body, function(err){
+            if(err){
+                res.send(err)
+            }
+        });
         usuarioRetorno.password = undefined;
         
         res.send({
@@ -28,7 +34,7 @@ router.post('/registro', async(req, res) =>{
             token:gerarToken({id:usuarioRetorno.id})
         });
     } catch(err){
-        return res.status(400).send({erro :'Registro falhou'});
+        return res.status(400).send({erro :err+' Registro falhou'});
     }
 });
 

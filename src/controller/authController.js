@@ -1,11 +1,14 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const usuario = require('../models/usuarioModel');
 const jwt = require('jsonwebtoken');
 const autConfig = require('../config/autenticacao.json');
 const crypto = require('crypto');
 const mailer = require('../modules/meiler');
-const connection = require('../database/mysql')
+const usuario = require('../models/usuarioDTO');
+
+async function gerarHashSenha(senha){
+    return bcrypt.hash(senha, 10);
+}
 
 const router = express.Router();
 
@@ -15,45 +18,41 @@ function gerarToken(params = {}){
     })
 }
 
-router.post('/registro', async(req, res) =>{
-    const {email} = req.body;
-    try{
-            //res.send({id:12});
-        // if (await usuario.create({email})){
-        //     return res.status(400).send({erro: 'usuario ja existe'})
-        // }
-        const usuarioRetorno = await usuario.getUsuario(connection,req.body, function(err){
-            if(err){
-                res.send(err)
-            }
-        });
-        usuarioRetorno.password = undefined;
+router.post('/registro', async(req, res) =>{          
+    const usuarioRetorno = await usuario.buscaUsuarioPorEmail(req.body.email);
+
+    if(!usuarioRetorno){
+        req.body.senha = await gerarHashSenha(req.body.senha)
+        await usuario.novoUsuario(req.body).then(data =>{
+            res.send({Usuario: data, token:gerarToken({id:data.id})})
+            }).catch( err =>{
+                res.status(400).send({erro: err});
+            })
         
-        res.send({
-            usuarioRetorno, 
-            token:gerarToken({id:usuarioRetorno.id})
-        });
-    } catch(err){
-        return res.status(400).send({erro :err+' Registro falhou'});
-    }
+    } else {
+        res.status(400).send({erro:'o usuário '+req.body.email+' já existe'});
+    } 
 });
 
 router.post('/autenticacao', async(req, res) =>{
-    const{email, password} = req.body;
-    const user = await usuario.findOne({email}).select('+password');
+    const{email, senha} = req.body;
+    await usuario.buscaUsuarioPorEmail(email).then(data =>{
+        console.log("luciano 23 "+data)
+            if(!data)
+                return res.status(400).send({erro : 'usuário não econtrado'});
 
-    if(!user)
-        return res.status(400).send({erro : 'usuário não econtrado'});
-
-    if(! await bcrypt.compare(password, user.password))        
-        return res.status(400).send({erro : 'Senha não confere'});
-
-    user.password = undefined;   
-    
-    res.send({
-        user, 
-        token:gerarToken({id:user.id})
-    });
+            bcrypt.compare(senha, data.senha).then(confere);
+            console.log("luciano 22 "+confere)
+            if(!confere)        
+                return res.status(400).send({erro : 'Senha não confere'});
+            
+            res.send({
+                data, 
+                token:gerarToken({id:data.id})
+            });
+    }).catch( err =>{
+        return res.status(400).send({erro : err});
+    })
 });
 
 router.post('/esqueci_minha_senha', async(req, res) =>{

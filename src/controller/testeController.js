@@ -1,5 +1,4 @@
 const express = require('express');
-const mysql = require('../database/mysql')
 
 const authMiddleware = require('../middlerwares/autenticacao');
 

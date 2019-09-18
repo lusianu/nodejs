@@ -19,45 +19,48 @@ function gerarToken(params = {}){
 }
 
 router.post('/registro', async(req, res) =>{          
-    const usuarioRetorno = await usuario.buscaUsuarioPorEmail(req.body.email);
+    
+    try {    
+        const usuarioExistente = await usuario.buscaUsuarioPorEmail(req.body.email);
 
-    if(!usuarioRetorno){
-        req.body.senha = await gerarHashSenha(req.body.senha)
-        await usuario.novoUsuario(req.body).then(data =>{
-            res.send({Usuario: data, token:gerarToken({id:data.id})})
-            }).catch( err =>{
-                res.status(400).send({erro: err});
-            })
-        
-    } else {
-        res.status(400).send({erro:'o usuário '+req.body.email+' já existe'});
-    } 
+        if(!usuarioExistente){
+            req.body.senha = await gerarHashSenha(req.body.senha);
+            
+            const usuarioRetorno = await usuario.novoUsuario(req.body);
+            
+            res.status(200).send({usuario: usuarioRetorno, token:gerarToken({id:usuarioRetorno.id})});
+            
+        } else {
+            res.status(400).send({erro:'o usuário '+usuarioExistente.email+' já existe'});
+        } 
+    } catch (err){
+        return res.status(400).send({erro : err});
+    }
 });
 
 router.post('/autenticacao', async(req, res) =>{
     const{email, senha} = req.body;
-    await usuario.buscaUsuarioPorEmail(email).then(data =>{
-        console.log("luciano 23 "+data)
-            if(!data)
-                return res.status(400).send({erro : 'usuário não econtrado'});
-
-            bcrypt.compare(senha, data.senha).then(confere);
-            console.log("luciano 22 "+confere)
-            if(!confere)        
+    
+    try {
+        const usuarioRetorno = await usuario.buscaUsuarioPorEmail(email)
+        
+        if(!usuarioRetorno){
+            return res.status(400).send({erro : 'usuário não econtrado'});
+        } else {
+            if(! await bcrypt.compare(senha, usuarioRetorno.senha)){
                 return res.status(400).send({erro : 'Senha não confere'});
-            
-            res.send({
-                data, 
-                token:gerarToken({id:data.id})
-            });
-    }).catch( err =>{
+            } else { 
+                res.status(200).send({usuarioRetorno, token:gerarToken({id:usuarioRetorno.id})});
+            }
+        }
+    } catch (err){
         return res.status(400).send({erro : err});
-    })
+    }
 });
 
 router.post('/esqueci_minha_senha', async(req, res) =>{
     const { email} = req.body;
-    try{
+    try {
         const user = await usuario.findOne({email});
 
         if(!user)

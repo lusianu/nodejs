@@ -2,18 +2,12 @@ const Usuario = require('./Usuarios');
 
 module.exports = {
 
-novoUsuario:    function novoUsuario(body){
-                    return new Promise((resolve, reject) =>{
-                        Usuario.create({
+novoUsuario:    async function novoUsuario(body){
+                       return Usuario.create({
                             nome:  body.nome,
                             email: body.email,
                             senha: body.senha
-                        }).then(res =>{
-                            resolve(res)
-                        }).catch(err =>{
-                            reject(err)
                         })
-                    })
                 },
 
 buscaUsuarios:  function buscaUsuarios(){
@@ -26,18 +20,12 @@ buscaUsuarios:  function buscaUsuarios(){
                     })
                 },
 
-buscaUsuarioPorEmail:  function buscaUsuarioPorEmail(email){
-                        return new Promise((resolve, reject) =>{
-                            Usuario.findOne({
+buscaUsuarioPorEmail:  async function buscaUsuarioPorEmail(email){
+                            return await Usuario.findOne({
                                 //attributes: ['nome'],
                                 where: {email : email}
-                            }).then(res =>{
-                                resolve(res)
-                            }).catch(err =>{
-                                reject(err)
                             })
-                        })
-                    },
+                        },
 
 
 buscaUsuario:   function buscaUsuario(id){
